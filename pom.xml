@@ -60,25 +60,29 @@
     <projectEmail>jcasey@redhat.com</projectEmail>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
+    <version.asm>6.2</version.asm>
     <version.plugin.assembly>2.6</version.plugin.assembly>
+    <version.plugin.checkstyle>3.0.0</version.plugin.checkstyle>
     <version.plugin.clean>3.0.0</version.plugin.clean>
     <version.plugin.compiler>3.7.0</version.plugin.compiler>
     <version.plugin.deploy>2.8.2</version.plugin.deploy>
     <version.plugin.enforcer>3.0.0-M1</version.plugin.enforcer>
-    <version.plugin.failsafe>2.20.1</version.plugin.failsafe>
+    <version.plugin.failsafe>2.22.0</version.plugin.failsafe>
     <version.plugin.gpg>1.6</version.plugin.gpg>
     <version.plugin.install>2.5.2</version.plugin.install>
     <version.plugin.jar>3.0.2</version.plugin.jar>
-    <version.plugin.javadoc>2.8.1</version.plugin.javadoc>
+    <version.plugin.javadoc>2.10.4</version.plugin.javadoc>
+    <version.plugin.javadoc.java9>3.0.1</version.plugin.javadoc.java9>
     <version.plugin.plexus-component-metadata>1.7</version.plugin.plexus-component-metadata>
-    <version.plugin.sisu>0.3.3</version.plugin.sisu>
     <version.plugin.plugin>3.5</version.plugin.plugin>
+    <version.plugin.project-info-reports>2.9</version.plugin.project-info-reports>
     <version.plugin.release>2.5.3</version.plugin.release>
     <version.plugin.resources>3.0.2</version.plugin.resources>
-    <version.plugin.site>3.6</version.plugin.site>
+    <version.plugin.sisu>0.3.3</version.plugin.sisu>
+    <version.plugin.site>3.7</version.plugin.site>
     <version.plugin.source>3.0.1</version.plugin.source>
-    <version.plugin.surefire>2.20.1</version.plugin.surefire>
-    <version.plugin.pmd>3.8</version.plugin.pmd>
+    <version.plugin.surefire>2.22.0</version.plugin.surefire>
+    <version.plugin.pmd>3.10.0</version.plugin.pmd>
 
     <illegaltransitivereportonly>false</illegaltransitivereportonly>
     <enforceManagedDeps>true</enforceManagedDeps>
@@ -106,12 +110,26 @@
             <testSource>${javaTestVersion}</testSource>
             <testTarget>${javaTestVersion}</testTarget>
           </configuration>
+          <dependencies>
+            <dependency>
+              <groupId>org.ow2.asm</groupId>
+              <artifactId>asm</artifactId>
+              <version>${version.asm}</version>
+            </dependency>
+          </dependencies>
         </plugin>
         <plugin>
           <artifactId>maven-clean-plugin</artifactId>
           <version>${version.plugin.clean}</version>
         </plugin>
-
+        <plugin>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <version>${version.plugin.checkstyle}</version>
+          <configuration>
+            <excludes>module-info.java</excludes>
+            <includeTestSourceDirectory>true</includeTestSourceDirectory>
+          </configuration>
+        </plugin>
         <plugin>
           <artifactId>maven-deploy-plugin</artifactId>
           <version>${version.plugin.deploy}</version>
@@ -119,6 +137,10 @@
         <plugin>
           <artifactId>maven-install-plugin</artifactId>
           <version>${version.plugin.install}</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-project-info-reports-plugin</artifactId>
+          <version>${version.plugin.project-info-reports}</version>
         </plugin>
         <plugin>
           <artifactId>maven-site-plugin</artifactId>
@@ -246,7 +268,7 @@
             <dependency>
               <groupId>org.ow2.asm</groupId>
               <artifactId>asm-analysis</artifactId>
-              <version>6.1.1</version>
+              <version>${version.asm}</version>
             </dependency>
           </dependencies>
           <executions>
@@ -286,6 +308,7 @@
                     <regexIgnoredClasses>
                         <regexIgnoredClass>com\.sun\.net\.httpserver\..+</regexIgnoredClass>
                         <regexIgnoredClass>javax\..+</regexIgnoredClass>
+                        <regexIgnoredClass>module-info</regexIgnoredClass>
                         <regexIgnoredClass>org\.w3c\.dom\..+</regexIgnoredClass>
                         <regexIgnoredClass>org\.xml\.sax\..+</regexIgnoredClass>
                     </regexIgnoredClasses>
@@ -509,9 +532,6 @@
       <plugin>
         <artifactId>maven-enforcer-plugin</artifactId>
       </plugin>
-      <plugin>
-        <artifactId>maven-javadoc-plugin</artifactId>
-      </plugin>
     </plugins>
   </build>
 
@@ -587,6 +607,60 @@
                 </goals>
               </execution>
             </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>java8</id>
+      <activation>
+        <property>
+          <name>javaVersion</name>
+          <value>1.8</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+              <excludes>
+                <exclude>module-info.java</exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+          <plugin>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <configuration>
+              <sourceFileExcludes>
+                <exclude>module-info.java</exclude>
+              </sourceFileExcludes>
+            </configuration>
+          </plugin>
+          <plugin>
+            <artifactId>maven-pmd-plugin</artifactId>
+            <configuration>
+              <excludes>
+                <exclude>module-info.java</exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>jdk9</id>
+      <activation>
+        <jdk>[9,)</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>${version.plugin.javadoc.java9}</version>
+            <configuration>
+              <additionalOptions>-html5</additionalOptions>
+            </configuration>
           </plugin>
         </plugins>
       </build>
